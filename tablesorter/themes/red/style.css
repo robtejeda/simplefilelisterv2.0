@@ -1,0 +1,127 @@
+/* tables */
+table.tablesorter {
+	width: 100%;
+	text-align: left;
+}
+
+table.tablesorter th:first-child {
+	width: 45% !important;
+}
+
+table.tablesorter thead tr .header,
+.folder-lister-table th {
+	cursor: pointer;
+	background-repeat: no-repeat;
+	background-position: center right;	
+	background-image: url(b.gif);
+	font-family: Arial, serif;
+	border: 1px solid #666;
+	background-color: #777;
+	height: 30px;
+	padding: 5px 10px;
+	color: #FFF;
+}
+
+table.tablesorter thead tr .headerSortUp {
+	background-image: url(a.gif);
+}
+
+table.tablesorter thead tr .headerSortDown {
+	background-image: url(d.gif);
+}
+
+.sfl_content {
+	border:none;
+}
+
+.folder-lister-table tr:nth-child(2) {
+	display: table-row;
+}
+
+.center{
+	text-align: center;
+}
+
+.folder-lister-table td {
+	border: 0;
+	left:0;
+	padding: 5px 15px;
+}
+
+.folder-lister-table tr:nth-child(odd) {
+	background-color: #DCDCDC;
+}
+
+.folder-lister-table tr:nth-child(even) {
+	background-color: #EEEEEE;
+}
+
+.folder-lister-table td a,
+.folder-lister-table td nobr{
+	font-size: 12px;
+	color:#202F68;
+}
+
+#div_sflcontent {
+	padding-bottom: 20px;
+	margin-bottom: 20px;
+	background-color: transparent !important;
+}
+
+#div_sflcontent b{
+	display: none;
+}
+
+a.sfl_btnDelete:after {
+	border-radius: 4px;
+}
+
+.board-portal aside {
+	display: none !important;
+}
+
+.board-portal .tm-main {
+	width: 100%;
+}
+
+.board-portal .tm-main.uk-push-3-10 {
+	left: 0;
+}
+
+a.sfl_btnDelete:after {
+    content: 'Delete';
+    background: #39F;
+    padding: 6px 12px;
+    font-size: 9px;
+    border: 0;
+    color: #fff;
+    font-family: Arial,serif;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sfl_btnDelete img {
+    display: none !important;
+}
+
+td.sfl_item img {
+	display: none;
+}
+
+.moduletable h3 {
+	display: none;
+}
+
+table.sfu_table {
+	width: 100%;
+	background-color: #DDDDDD;
+}
+
+td.sfu_table {
+	padding: 15px;
+}
+
+table.upload-file-box td {
+	padding:5px;
+}
