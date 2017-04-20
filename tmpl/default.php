@@ -18,7 +18,8 @@
     }
 ?>
 
-<?php echo $open_div ?>
+
+<?php echo $_SERVER['']?>
 
     <div id="div_sflcontent" class="sfl_content" style="background: <?php echo $sfl_bgcolor ?>; left: <?php echo $sfl_boxleft ?>px;">
         <span style="display: none"><a id="sfl_ARefresh" class="sfl_ARefresh" href="javascript:void(0);">Refresh</a></span>

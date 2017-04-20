@@ -7,7 +7,7 @@ if (curPageURL.indexOf(".php?") > 0) {
 }
 
 
-( function(jQuery) {
+(function(jQuery) {
 
     // wait till the DOM is loaded
     jQuery(document).ready(function() {
@@ -16,16 +16,22 @@ if (curPageURL.indexOf(".php?") > 0) {
 
         function getCurBrowserDir() {
 
-            var location = window.location.href;
-            location.substring(location.indexOf('#')+1);
+            var location = getCurSection();
 
-            curBrowseDir = (window.sfl_dirlocation+location.substring(location.indexOf('#')+1)).replace('.','');
+            var pathWithoutLastPiece = window.sfl_dirlocation.substring(0, window.sfl_dirlocation.lastIndexOf('/'));
+            curBrowseDir = (pathWithoutLastPiece+'/'+location.substring(location.indexOf('#')+1)).replace('.','');
+
             return curBrowseDir;
         };
 
-        jQuery('#sfl_ARefresh').live('click', function() {
+        function getCurSection() {
 
-             getCurBrowserDir();
+            var location = window.location.href;
+            location = location.substring(location.indexOf('#')+1);
+            return location;
+        }
+
+        jQuery('#sfl_ARefresh').live('click', function() {
 
             var params = '&sflDir=' + getCurBrowserDir();
 
@@ -188,20 +194,16 @@ if (curPageURL.indexOf(".php?") > 0) {
             return false;
         });
 
-        jQuery('#sfl_btnNext').live('click', function() {
+        jQuery('#sfl_btnNext').click(function(evt) {
 
             var nextVal = document.getElementById('sflNextVal').value;
             var params = '&sflNext=' + nextVal + '&sflDir=' + getCurBrowserDir();
+            var containerId = '#'+getCurSection()+' .sfl_content table tbody';
 
-            jQuery('#div_sflcontent')
-            .css('text-align', 'center');
-
-            jQuery('#div_sflcontent')
+            jQuery(containerId)
                 .html('')
                 .append('<img style="position: relative; top: 50px;" src="/modules/mod_simplefilelisterv1.0/images/ajax-loader.gif" />')
-                .fadeIn(700, function() {
-                    //$('#div_sflcontent').append("DONE!");
-                });
+                .fadeIn(700);
 
             jQuery.ajax({
                 type: 'GET',
@@ -209,8 +211,8 @@ if (curPageURL.indexOf(".php?") > 0) {
                 data: 'sflaction=next' + params,
                 cache: false,
                 success: function(data) {
-                    jQuery('#div_sflcontent').css('text-align', 'left');
-                    jQuery('#div_sflcontent').html('').append(data);
+
+                    jQuery(containerId).html('').append(data);
                 }
             });
 
@@ -248,4 +250,4 @@ if (curPageURL.indexOf(".php?") > 0) {
             return false;
         });
     });
-} ) ( jQuery );
+})(jQuery);

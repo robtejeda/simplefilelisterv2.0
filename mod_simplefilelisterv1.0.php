@@ -13,7 +13,6 @@
      * other free or open source software licenses.
      */
      
-
     error_reporting(0);
     ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_WARNING & ~E_STRICT & ~E_DEPRECATED);
     ini_set('display_errors','Off');
@@ -61,19 +60,23 @@
     }
 
     if ($sfl_maxfiles > 0) {
+
         // Check if this is a new login
         if ($session->get( 'sfl_usrid', 0) !== $usr_id) {
+
             $session->set( 'sfl_nextindex', 0);
             $session->set( 'sfl_stopindex', $sfl_maxfiles);
         } else {
 
             if (isset($_GET["sflPrevious"])) {
+
                 if (strlen($_GET["sflPrevious"]) > 0) {
 
                     $idx_startat = $session->get( 'sfl_nextindex', 0);
                     $idx_endat = $session->get( 'sfl_stopindex', $sfl_maxfiles);
                     
                     if ($idx_startat > 0 && $idx_endat > $sfl_maxfiles) {
+
                         $idx_startat = $_GET["sflPrevious"] - $sfl_maxfiles;
                         $idx_endat = $idx_startat + $sfl_maxfiles;
                         
@@ -95,16 +98,17 @@
         $session->set( 'sfl_stopindex', $sfl_maxfiles);
     }
 
-
     if ($sfl_useusernameddir == 1) {
 
         // If only list users files clear default path
         if ($sfl_usernameddirdefault === '1' && strlen($sfl_userlocation) > 0) $sfl_dirlocation = '';
 
         if ($usr_id > 0 && strlen($sfl_userlocation) > 0) { 
+
             // Set user path, it already has the DIRECTORY_SEPARATOR at the end, don't add after usr_name.
             $sfl_userlocation .= $usr_name;
         } else {
+
             $sfl_userlocation = '';
         }
     } else {
@@ -113,24 +117,35 @@
     }
     // Make ready for Ajax calls and avoid any whitespace
     if (isset($_GET["sflaction"])) {
-    if(!class_exists('SFLAjaxServlet')) JLoader::register('SFLAjaxServlet' , dirname(__FILE__).DIRECTORY_SEPARATOR.'helper.php');
-    //Security check
-    if (isset($_GET["sflDir"])) {
-        if (strlen($sfl_userlocation) == 0) $sfl_userlocation = "-";
-        // Check that either default dir or user dir is present in the given dir. If not set it to default
-        if (strpos($_GET["sflDir"], $sfl_dirlocation) === false && strpos($_GET["sflDir"], $sfl_userlocation) === false) {
-            // Add warning txt?
-        } else {
-            $sfl_dirlocation = $_GET["sflDir"];
+
+        if(!class_exists('SFLAjaxServlet')) {
+
+            JLoader::register('SFLAjaxServlet' , dirname(__FILE__).DIRECTORY_SEPARATOR.'helper.php');
         }
-    }
-    if (strpos($sfl_dirlocation, "../") !== false) $sfl_dirlocation = $params->get( 'sfl_dirlocation', '.'.DIRECTORY_SEPARATOR.'images' );
-    if (strlen($sfl_dirlocation) == 0) $sfl_dirlocation = $sfl_userlocation;
-    $sfl_file = "";
-    $session->set( 'sfl_currentdir', $sfl_dirlocation);
-    if ($_GET["sflaction"] === "delete") $sfl_file = $_GET["sflDelete"];
-    if ($_GET["sflaction"] === "sort" && isset($_GET["sflSort"])) $session->set( 'sfl_sort', $_GET["sflSort"]);
-    echo SFLAjaxServlet::getContent($_GET["sflaction"], $params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation, $sfl_file);
+
+        //Security check
+        if (isset($_GET["sflDir"])) {
+
+            if (strlen($sfl_userlocation) == 0){
+                $sfl_userlocation = "-";
+            }
+
+            // Check that either default dir or user dir is present in the given dir. If not set it to default
+            if (strpos($_GET["sflDir"], $sfl_dirlocation) === false && strpos($_GET["sflDir"], $sfl_userlocation) === false) {
+                // Add warning txt?
+            } else {
+
+                $sfl_dirlocation = $_GET["sflDir"];
+            }
+        }
+
+        if (strpos($sfl_dirlocation, "../") !== false) $sfl_dirlocation = $params->get( 'sfl_dirlocation', '.'.DIRECTORY_SEPARATOR.'images' );
+        if (strlen($sfl_dirlocation) == 0) $sfl_dirlocation = $sfl_userlocation;
+        $sfl_file = "";
+        $session->set( 'sfl_currentdir', $sfl_dirlocation);
+        if ($_GET["sflaction"] === "delete") $sfl_file = $_GET["sflDelete"];
+        if ($_GET["sflaction"] === "sort" && isset($_GET["sflSort"])) $session->set( 'sfl_sort', $_GET["sflSort"]);
+        echo SFLAjaxServlet::getContent($_GET["sflaction"], $params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation, $sfl_file);
     } else {
 
         // include the helper file
@@ -140,6 +155,5 @@
 
         // include the template for display
         require(JModuleHelper::getLayoutPath('mod_simplefilelisterv'.$sfl_version));
-
     }
 ?>
