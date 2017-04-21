@@ -31,8 +31,13 @@
     -webkit-box-shadow: 1px 1px 5px #999;
     box-shadow: 1px 1px 5px #999;
 }
+
 .sfldel {
     height: 12px;
     position: relative;
     top: 2px;
+}
+
+.text-right {
+	text-align: right;
 }

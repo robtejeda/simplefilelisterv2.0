@@ -16,18 +16,8 @@ class ModSimpleFileListerHelperv10 {
 
         $session->set( 'sfl_startdir', '');
         $session->set( 'sfl_userdir', '');
-        $rand = rand();
 
-        $results = "<table width=\"100%\" class=\"folder-lister-table tablesorter\" style=\"text-align: left\" id=\"documents-list-$rand\">
-                    <thead>
-                        <tr>
-                            <th width=\"50%\" class=\"header\">Filename</th>
-                            <th class=\"header\">Date</th>
-                            <th class=\"header\">File Size (MB)</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>";
+        $results = "";
 
         if (strlen($sfl_dirlocation) == 0 && strlen($sfl_userlocation) == 0) {
 
@@ -38,25 +28,6 @@ class ModSimpleFileListerHelperv10 {
             $results .= ModSimpleFileListerHelperv10::getDirContents($params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation);
         }
 
-        $results .= "</tr></tbody></table>";
-
-        $results .=     
-        "<script type=\"text/javascript\">
-            jQuery(document).ready(function(){
-                if(typeof jQuery(\"#documents-list-$rand\") !== \"undefined\") {
-                    jQuery(\"#documents-list-$rand tbody tr:first-child\").remove();
-                    jQuery(\"#documents-list-$rand\").tablesorter({ 
-                        headers: { 
-                            3: { 
-                                sorter: false 
-                            }
-                        } 
-                    });
-                }
-            });
-        </script>";
-
-        //O3 CUSTOM CODE
         return $results;
     }
     
@@ -101,7 +72,6 @@ class ModSimpleFileListerHelperv10 {
         $sfl_browsedir = $params->get( 'sfl_browsedir', '0' );
         $sfl_showdir = $params->get( 'sfl_showdir', '1');
         $sfl_showicon = $params->get( 'sfl_showicon', '1');
-        $sfl_sortorder = $params->get( 'sfl_sortorder', 'asc');
         $sfl_showsort = $params->get( 'sfl_showsort', '0' );
         $sfl_setbasepath = $params->get( 'sfl_basepath', '');
         $sfl_basepathusr = $params->get( 'sfl_basepathusr', '');
@@ -118,83 +88,13 @@ class ModSimpleFileListerHelperv10 {
         $tmpSort = $session->get( 'sfl_sort', '');
         $show_delete = "0";
 
-        if (strlen($tmpSort) > 0) {
-
-            $sfl_sortorder = $tmpSort;
-        }
-
-        // Get current logged in user
-        $user =& JFactory::getUser();
-
-        $usr_name = $user->get('username');
-
-        if(stripos($usr_name, "/") !== false) {
-
-            $usr_name = "";
-        }
-
-        if(stripos($usr_name, "\\") !== false) {
-
-            $usr_name = "";
-        }
-
-        if(stripos($usr_name, "..") !== false) {
-
-            $usr_name = "";
-        }
-
-        if ($sfl_allowdelete === "1") {
-
-            if ($sfl_allowdeleteall === "1") {
-            
-                $show_delete = "1";
-            }
-
-            if ($sfl_allowdeletereg === "1" && !$user->guest){            
-
-                $show_delete = "1";
-            }
-
-            if ($sfl_allowdeleteedt === "1" && $user->authorise('core.edit', 'com_content')) {
-
-                $show_delete = "1";
-            }
-        }
+        $tds = "";
+        $rows = [];
 
         // Don't allow moving upwards in dirs through AJAX
         if ($sfl_allowupdir == 0 && strlen(strstr($sfl_dirlocation, "../")) > 0) $sfl_dirlocation = $sfl_dirlocationdefault;
 
         if (strlen(strstr($sfl_dirlocation, $sfl_dirlocationdefault)) <= 0) $sfl_dirlocation = $sfl_dirlocationdefault;
-
-        // If only sfl_userlocation is set!
-        if (strlen($sfl_dirlocation) == 0 || (strlen($sfl_dirlocation) > 0 && strlen($sfl_userlocation) > 0)) {
-
-            $sfl_dirlocation = $sfl_userlocation;
-
-            if ( substr( $sfl_dirlocation , strlen($sfl_dirlocation) - 1) !== DIRECTORY_SEPARATOR )
-
-                $sfl_dirlocation .= DIRECTORY_SEPARATOR;
-
-            if (strlen($sfl_basepathusr) > 0 && $usr_name !== "") {
-
-                if ( substr( $sfl_basepathusr , strlen($sfl_basepathusr) - 1) !== DIRECTORY_SEPARATOR ){
-
-                    $sfl_basepathusr .= "/".$usr_name."/";
-                } else {
-
-                    $sfl_basepathusr .= $usr_name."/";
-                }
-                    
-                $sfl_setbasepath = $sfl_basepathusr;
-                $session->set( 'sfl_userdir', $sfl_setbasepath);
-            }
-
-        } else {
-
-            // check if we are in "user" mode
-            $sfl_basepathusr = $session->get( 'sfl_userdir', '');
-            if (strlen($sfl_basepathusr) > 0) $sfl_setbasepath = $sfl_basepathusr;
-        }
 
         $baseurl = ModSimpleFileListerHelperv10::getBaseURL($sfl_dirlocation, $sfl_setbasepath);
 
@@ -210,91 +110,6 @@ class ModSimpleFileListerHelperv10 {
             $session->set( 'sfl_startdir', $sfl_dirlocation);
 
 
-
-        if (strlen($startdir) > 0 && str_replace(DIRECTORY_SEPARATOR, "", $startdir) !== str_replace(DIRECTORY_SEPARATOR, "", $sfl_dirlocation)) {
-
-            // We have browsed!
-
-            
-
-            $browsedir = substr($sfl_dirlocation, strlen($startdir));
-
-            // Remove any leading slash
-
-            $browsedir = str_replace(DIRECTORY_SEPARATOR, "/", substr($browsedir, 1));
-
-            // Remove any trialing slash
-
-            if ( substr( $browsedir , strlen($browsedir) - 1) === DIRECTORY_SEPARATOR )
-
-                $browsedir = substr( $browsedir, 0, strlen($browsedir) - 1);
-
-            // Make sure we are working with front-slash only
-
-            $browsedir = str_replace(DIRECTORY_SEPARATOR, "/", $browsedir);
-
-
-
-            $sfl_breadcrumb = "<a class=\"sfl_btnBrowseDir\" rel=\"". $startdir."\" href=\"javascript: void(0);\">".$startdir."</a>/";
-
-            
-
-            $dirvals = "/";
-
-            $icntdir = 0;
-
-            $pathcol = explode("/", $browsedir);
-
-            foreach ($pathcol as $dirval) {
-
-                $dirvals .= $dirval."/";
-
-                $icntdir++;
-
-                if ($icntdir < count($pathcol)) {
-
-                    $sfl_breadcrumb .= "<a class=\"sfl_btnBrowseDir\" rel=\"".$startdir.$dirvals."\" href=\"javascript: void(0);\">".$dirval."</a>/";
-
-                    // Get parent dir for "go up"
-
-                    $sfl_goupdir = "<a class=\"sfl_btnBrowseDir\" rel=\"".$startdir.$dirvals."\" href=\"javascript: void(0);\">".JText::_('UP_DIR')."</a>";
-
-                } else {
-
-                    $sfl_breadcrumb .= $dirval;
-
-                    $sfl_currentdir = " ".$dirval;
-
-                }
-
-            }
-
-            // Fix AW 2001-05-20, if web server path is set subdir is omitted without below
-            $subdirlocation = $dirvals;
-
-            // Remove initial slash if exist
-            if (substr($subdirlocation, 0, 1) === "/") {
-
-                $subdirlocation = substr($subdirlocation, 1);
-            }
-
-            // Add trainling slash
-            if (substr($subdirlocation, strlen($subdirlocation) - 1) !== "/") {
-
-                $subdirlocation .= "/";
-            }
-
-            $baseurl .= $subdirlocation;
-
-        } else {
-
-            if ($startdir === "") {
-                $startdir = $sfl_dirlocation;
-            }
-
-            $sfl_breadcrumb = $startdir;
-        }   
-
         // Open directory
         if($bib = @opendir($sfl_dirlocation)) {
 
@@ -303,12 +118,6 @@ class ModSimpleFileListerHelperv10 {
             $file_list = null;
             $idx_startat = $session->get( 'sfl_nextindex', 0);
             $idx_endat = $session->get( 'sfl_stopindex', $sfl_maxfiles);
-
-            if ($sfl_next === '1' && $idx_startat > 0)
-                $fil_list[] = "<input type=\"hidden\" id=\"sflPrevVal\" value=\"".$idx_startat."\" /><a id=\"sfl_btnPrev\" href=\"javascript:void(0)\">".JText::_('PREV_BTN')."</a>";
-
-            else
-                $fil_list[] = "<input type=\"hidden\" id=\"sflPrevVal\" value=\"-1\" />";
 
             while (false !== ($lfile = readdir($bib))) {
 
@@ -320,30 +129,6 @@ class ModSimpleFileListerHelperv10 {
                 } else {
                     $file_list[] = array( "sort" => strtolower($lfile), "name" => $lfile );
                 }
-            }
-
-            //Sort Directories
-            if (is_array($dir_list)) {
-
-                //Asc
-                if ($sfl_sortorder === "asc")
-                    asort($dir_list);
-
-                //Desc
-                if ($sfl_sortorder === "desc")
-                    rsort($dir_list);
-            }
-
-            //Sort Files
-            if (is_array($file_list)) {
-
-                //Asc
-                if ($sfl_sortorder === "asc")
-                    asort($file_list);
-
-                //Desc
-                if ($sfl_sortorder === "desc")
-                    rsort($file_list);
             }
 
             if ($sfl_listdir == 1 && is_array($dir_list) && is_array($file_list))
@@ -378,86 +163,30 @@ class ModSimpleFileListerHelperv10 {
 
                         $idx += 1;
 
-                        if ($idx > $idx_startat && $idx <= $idx_endat) {
+                        $row['href'] = $sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name'].'">'.$lfile['name'];
+                        $row['filename'] = $lfile['name'];
+                        $row['date'] = date ("M j, Y g:i A", filemtime($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name']));
+                        $row['size'] = ModSimpleFileListerHelperv10::getFileSizePP(filesize($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name']));
+                        
+                        $rows[] = $row;
 
-                            $tmpfile = "";
-                            $tmpthumb = "";
-                        //     $is_img = false;
-
-                            if (($sfl_imgthumbs === '1' || $sfl_imgthumbs === '2') && !$fdir) {
-
-                            //     //Check image
-                            //     if ((filesize($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name']) <= $sfl_disablegdthreshold) || ($sfl_disablegdthreshold == 0)) {
-
-                            //         if ($img = @getimagesize($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name'])) {
-
-                            //             // Show thumbnail
-                            //             list($width, $height, $type, $attr) = getimagesize($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name']); 
-
-                            //             if (($height > $sfl_thumbheight) && ($sfl_thumbkeepaspect === '1'))
-                            //                 $tmpthumb = "<img border=\"0\" height=$sfl_thumbheight src=\"".$baseurl.str_replace(" ", "%20", $lfile['name'])."\"/>";
-
-                            //             else
-                            //                 $tmpthumb = "<img border=\"0\" height=$sfl_thumbheight width=$sfl_thumbheight src=\"".$baseurl.str_replace(" ", "%20", $lfile['name'])."\"/>";  
-
-                            //             $is_img = true;
-
-                            //         } else {
-
-                            //             // no thumbnail and show icon
-                            //             if ($sfl_showicon == 1)
-                            //                 $tmpfile .= "<img height=\"24\" src=\"".JURI::root().$sfl_basepath."images/file.png\"/>";
-                            //         }
-
-                            //     } else {
-
-                            //         $tmpfile .= "<img height=\"24\" src=\"".JURI::root().$sfl_basepath."images/file.png\"/>";
-                            //     }
-                            } elseif ($fdir) {
-
-                                $lfile['name'] = substr($lfile['name'], 5);
-                            //     $tmpfile .= "<img height=\"24\" src=\"".JURI::root().$sfl_basepath."images/directory.png\"/>";
-                            } elseif ($sfl_showicon == 1) {
-
-                            //     $tmpfile .= "<img height=\"24\" src=\"".JURI::root().$sfl_basepath."images/file.png\"/>";
-                            }
-
-                            if ($fdir) {
-
-                            //     if ($sfl_browsedir == 1)
-                            //         $tmpfile .= "<a class=\"sfl_btnBrowseDir\" rel=\"" . $sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name'] . "\" href=\"javascript: void(0);\">".$lfile['name']."</a>";
-
-                            //     else
-                            //         $tmpfile .= $lfile['name'];
-
-                            } else {
-
-                            //     // Add thumb-nail as clickable, empty string if no thumb option
-                            //     $linktext = $tmpthumb;
-
-                            //     if ($sfl_imgthumbs !== '2' || !$is_img) {
-
-                            //         // Add the filename if it is not an image and/or thumb is not created
-                            //         $linktext .= $lfile['name'];
-                            //     }
-
-                            //     $tmpfile .= "<a href=\"".$baseurl.str_replace(" ", "%20", $lfile['name'])."\" target=\"blank\">".$linktext."</a>";
-                            }
-
-                            // Show size but not for directories
-                            if ($sfl_showfilesize === '1' && !$fdir) 
-                                $tmpfile .= " (".ModSimpleFileListerHelperv10::getFileSizePP(filesize($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name'])).")";
-
-                            $filetime=filemtime($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name']);
-                            $tmpfile .= " </td><td class=\"sfl_item center\"><nobr>".date ("M j, Y g:i A", $filetime)."</nobr></td><td class=\"sfl_item center\"><nobr>".round((filesize($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name'])/1024)/1024,1)."</nobr>";
+                        $tds .=  
+                        '<tr>
+                                <td class="sfl_item">
+                                    <nobr><a href="'.$row['href'].'">'.$row['name'].'</a></nobr>
+                                </td>
+                                <td class="sfl_item text-right"><nobr>'.$row['date'].'</nobr></td>
+                                <td class="sfl_item text-right"><nobr>'.$row['size'].'</nobr></td>
+                                <td class="action-btn">
+                                    <nobr>
+                                        <a class="sfl_btnDelete" href="#" onclick=deleteFile("'.$row['name'].'")>
+                                            <img class="sfldel" src="/modules/mod_simplefilelisterv1.0/images/delete.png">
+                                        </a>
+                                    </nobr>
+                                </td>
+                        </tr>';
 
 
-                            // // Allow delete?
-                            // if ($show_delete === '1' && !$fdir)
-                            //     $tmpfile .= " </td><td class=\"action-btn\"><a class=\"sfl_btnDelete\" rel=\"".$sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name']."**".$lfile['name']."\" href=\"javascript:void(0)\"><img class=\"sfldel\" src=\"".JURI::root().$sfl_basepath."images/delete.png\" /></a>";
-
-                            // if (($sfl_onlyimg === '1' && $is_img) || ($sfl_onlyimg !== '1')) 
-                            //     $fil_list[] = $tmpfile."</nobr>";
                         }
                     }
                 }
@@ -467,50 +196,7 @@ class ModSimpleFileListerHelperv10 {
 
             closedir($bib);
 
-            if ($sfl_next === '1' && $idx >= $idx_endat)
-                $fil_list[] = "<input type=\"hidden\" id=\"sflNextVal\" value=\"".$idx_endat."\" /><a id=\"sfl_btnNext\" href=\"javascript:void(0)\">".JText::_('NEXT_BTN')."</a>";
-
-            if(is_array($fil_list)) {
-
-                $liste = "<tr><td class=\"sfl_item\">" . join("</td></tr><tr><td class=\"sfl_item\">", $fil_list) . "</td></tr>";
-            } else {
-
-                $liste = "<tr><td class=\"sfl_item\">" . JText::_('NO_FILES_FOUND') . " " . $sfl_dirlocation . "</td></tr>";
-            }
-
-            $sortascclass = "";
-            $sortdescclass = "";
-
-            if ($sfl_sortorder === "desc")
-                $sortascclass = "class=\"sfl_shadow\" ";
-
-            elseif ($sfl_sortorder === "asc")
-                $sortdescclass = "class=\"sfl_shadow\" ";
-
-            $sort_arrows = "";
-
-            if ($sfl_showsort == 1)
-                $sort_arrows = "<div style=\"width: 90%; height: 12px; text-align: right;\"><a id=\"sfl_ASortAsc\" class=\"sfl_ASortAsc\" href=\"javascript:void(0)\"><img id=\"sflSortAsc\" ".$sortascclass."alt=\"Sort ascending\" style=\"cursor: n-resize ;\" src=\"".JURI::root().$sfl_basepath."images/sort_up.png\" /></a>&nbsp;<a id=\"sfl_ASortDesc\" class=\"sfl_ASortDesc\" href=\"javascript:void(0)\"><img id=\"sflSortDesc\" ".$sortdescclass."alt=\"Sort descending\" style=\"cursor: n-resize ;\" src=\"".JURI::root().$sfl_basepath."images/sort_down.png\" /></a></div>";
-
-            if ($sfl_showdir == 1) {
-                $results .=  "<b>" . JText::_('FILES_IN_DIR') . " (" . $sfl_breadcrumb . "):</b>";
-
-            } elseif ($sfl_showdir == 0) {
-
-                $results .=  "<b>".JText::_('FILES_IN_DIR').$sfl_currentdir.":</b><br />";
-                // If no breadcrumb we must have "home" and "up" buttons
-                if (strlen($browsedir) > 0)
-                    $results .= "<a class=\"sfl_btnBrowseDir\" rel=\"".$startdir."\" href=\"javascript: void(0);\">".JText::_('GO_HOME')."</a>&nbsp;&nbsp;".$sfl_goupdir."<br />";
-            }
-
-            $results .= $sort_arrows."<div>" . $liste . "</div>";
-
-        } else {
-
-            $results .=  "<b>" . JText::_('ERROR_READ') ." (Dir: ". $sfl_dirlocation . ")</b>";
-        }
-
-        return $results;
+        return json_encode($rows);
     }
 
     function getBaseURL($sfl_dirlocation, $sfl_basepath) {
@@ -559,10 +245,8 @@ class ModSimpleFileListerHelperv10 {
                 //We have a root path, check and see if it is under Server root, e.g. make http:// url
                 $sfl_realdirlocation = realpath($dirlocation);
                 $sfl_realdirlocation = str_replace("\\", "/", $sfl_realdirlocation);
-                $server_root = realpath($_SERVER["DOCUMENT_ROOT"]);
-                $server_path = str_replace($server_root, "", str_replace("index.php", "", realpath($_SERVER["SCRIPT_FILENAME"])));
-                $server_root = str_replace("\\", "/", $server_root);
-                $server_path = str_replace("\\", "/", $server_path);
+                $server_root = str_replace("\\", "/", realpath($_SERVER["DOCUMENT_ROOT"]));
+                $server_path = str_replace("\\", "/",str_replace($server_root, "", str_replace("index.php", "", realpath($_SERVER["SCRIPT_FILENAME"]))));
 
                 if (strlen(str_replace($server_root, "", $sfl_realdirlocation)) < strlen($sfl_realdirlocation)) {
 
@@ -613,179 +297,16 @@ class ModSimpleFileListerHelperv10 {
 
         return $baseurl;
     }
-
-    function deleteFile($params, $fileName) {
-
-        $sfl_allowdelete = $params->get( 'sfl_allowdelete', '0' );
-        $sfl_allowdeleteall = $params->get( 'sfl_allowdeleteall', '0' );
-        $sfl_allowdeletereg = $params->get( 'sfl_allowdeletereg', '0' );
-        $sfl_allowdeleteedt = $params->get( 'sfl_allowdeleteedt', '0' );
-        $sfl_movedeleted = $params->get( 'sfl_movedeleted', '0' );
-        $sfl_movedeletedpath = $params->get( 'sfl_movedeletedpath', '' );
-        $session =& JFactory::getSession();
-
-        // Get current logged in user
-        $user =& JFactory::getUser();
-        $usr_name = $user->get('username');
-
-        if(stripos($usr_name, "/") !== false) {
-
-            $usr_name = "fake";
-        }
-
-        if(stripos($usr_name, "\\") !== false) {
-
-            $usr_name = "fake";
-        }
-
-        if(stripos($usr_name, "..") !== false) {
-
-            $usr_name = "fake";
-        }
-
-        $fileName = explode("**", $fileName);
-        $absoluteFilePath = $fileName[0];
-        $fileName = $fileName[1];
-        $show_delete = "0";
-        $msg_backup = "";
-
-        if ($sfl_allowdelete === "1") {
-
-            if ($sfl_allowdeleteall === "1")
-
-                $show_delete = "1";
-
-            if ($sfl_allowdeletereg === "1" && !$user->guest)
-
-                $show_delete = "1";
-
-            if ($sfl_allowdeleteedt === "1" && $user->authorise('core.edit', 'com_content'))
-
-                $show_delete = "1";
-
-        }
-
-        // Check that we are in the current listed directory
-        if ($session->get( 'sfl_currentdir' ).$fileName != $absoluteFilePath) {
-
-            $show_delete = 0;
-        }
-
-        // Make sure that the file deleted is in the list shown
-        if (strpos($session->get( 'sfl_filelist' ), $fileName.'*') === false) {
-
-            $show_delete = 0;
-        }
-
-        if ($show_delete === "1") {
-
-            // Check if you are to move the file
-            if ($sfl_movedeleted === "1") {
-
-                // Bail out if no move directory is set, must be atleast "./a"
-                if (strlen($sfl_movedeletedpath) < 3)
-
-                    return JText::_('DELETE_MSG1');
-                    //return "Setup error!\nYou must set the path to the directory to move the files to before deleting files!\nCheck your Joomla backend settings.";
-
-                if ( substr( $sfl_movedeletedpath , strlen($sfl_movedeletedpath) - 1) !== DIRECTORY_SEPARATOR ) {
-                
-                    $sfl_movedeletedpath .= DIRECTORY_SEPARATOR;
-                }
-
-                if (!file_exists($sfl_movedeletedpath)) {
-
-                    if (mkdir($sfl_movedeletedpath, 0777, true)) {
-
-                        // Add empty HTML page to newly created directory
-                        if (!file_exists($sfl_movedeletedpath . "index.html")) {
-
-                            $fhIndex = fopen($sfl_movedeletedpath . "index.html", "w");
-
-                            if (!$fhIndex) {
-
-                                $stringData = "<html><body bgcolor=\"#FFFFFF\"></body></html>\n";
-                                fwrite($fhIndex, $stringData);
-                                fclose($fhIndex);
-                            }
-                        }
-
-                    } else {
-
-                        return JText::_('DELETE_MSG2').$sfl_movedeletedpath;
-                        //return "Failed to create backup directory $sfl_movedeletedpath";
-                    }
-                }
-
-                $new_filename = $sfl_movedeletedpath.$fileName."_".$usr_name."_".microtime();
-
-                if (!copy($absoluteFilePath, $new_filename)) {
-
-                    return JText::_('DELETE_MSG3');
-                    //return "Failed to move file! Original file not deleted!";
-
-                } else {
-
-                    if (!file_exists($new_filename)){
-
-                        return JText::_('DELETE_MSG4');
-                        //return "Backup file does not exist. Delete failed!";
-                    }
-
-                    $msg_backup = "\n(".JText::_('DELETE_MSG5').")";
-                }
-
-            }
-
-            if (!unlink($absoluteFilePath)) {
-
-                return JText::_('DELETE_MSG6')." ($absoluteFilePath)!";
-                //return "Failed to delete file ($absoluteFilePath)!";
-
-            } else {
-
-                return "$fileName ".JText::_('DELETE_MSG7')."!$msg_backup";
-            }
-        } else {
-
-            return JText::_('DELETE_MSG8');
-            //return "You are not allowed to delete files!";
-        }
-    }
 }
-
 
 class SFLAjaxServlet {
 
     function getContent($action, $params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation, $sfl_file) {
 
-        $retVal = "false";
-
-        // We should alsways get directory through Ajax call, userlocation only at initial call
-        $sfl_userlocation = "";
-
-        switch ($action) {
-
-            case "delete":
-
-                // Just send the information text back!
-                $retVal = ModSimpleFileListerHelperv10::deleteFile($params, $sfl_file);
-                break;
-
-            case "next" || "prev" || "dir" || "sort":
-
-                $retVal = ModSimpleFileListerHelperv10::getDirContents($params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation);
-                break;
-
-            default:
-
-                $retVal = "Action missing";
-                break;
-        }
-
+        $content = ModSimpleFileListerHelperv10::getDirContents($params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation);
         $app = JFactory::getApplication();
-        echo $retVal;
-
         $app->close();
+
+        return $content;
     }
 }
