@@ -59,45 +59,6 @@
         $usr_name = "";
     }
 
-    if ($sfl_maxfiles > 0) {
-
-        // Check if this is a new login
-        if ($session->get( 'sfl_usrid', 0) !== $usr_id) {
-
-            $session->set( 'sfl_nextindex', 0);
-            $session->set( 'sfl_stopindex', $sfl_maxfiles);
-        } else {
-
-            if (isset($_GET["sflPrevious"])) {
-
-                if (strlen($_GET["sflPrevious"]) > 0) {
-
-                    $idx_startat = $session->get( 'sfl_nextindex', 0);
-                    $idx_endat = $session->get( 'sfl_stopindex', $sfl_maxfiles);
-                    
-                    if ($idx_startat > 0 && $idx_endat > $sfl_maxfiles) {
-
-                        $idx_startat = $_GET["sflPrevious"] - $sfl_maxfiles;
-                        $idx_endat = $idx_startat + $sfl_maxfiles;
-                        
-                        $session->set( 'sfl_nextindex', $idx_startat);
-                        $session->set( 'sfl_stopindex', $idx_endat);
-                    }
-                }
-            }
-
-        }
-
-        $session->set( 'sfl_usrid', $usr_id);
-    }
-
-    if (!isset($_GET["sflPrevious"]) && !isset($_GET["sflNext"])) {
-        
-        // Neither next nor previous, must be reload from other link
-        $session->set( 'sfl_nextindex', 0);
-        $session->set( 'sfl_stopindex', $sfl_maxfiles);
-    }
-
     if ($sfl_useusernameddir == 1) {
 
         // If only list users files clear default path
@@ -150,8 +111,7 @@
 
         // include the helper file
         require_once(dirname(__FILE__).DIRECTORY_SEPARATOR.'helper.php');
-        $results = '';
-        $results .= ModSimpleFileListerHelperv10::getFileList($params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation);
+        $results = ModSimpleFileListerHelperv10::getFileList($params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation);
 
         // include the template for display
         require(JModuleHelper::getLayoutPath('mod_simplefilelisterv'.$sfl_version));

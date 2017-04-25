@@ -11,22 +11,16 @@ class ModSimpleFileListerHelperv10 {
         $sfl_maxfiles,
         $sfl_userlocation) {
 
-        $results = "";
         $session =& JFactory::getSession();
 
         $session->set( 'sfl_startdir', '');
         $session->set( 'sfl_userdir', '');
 
-        $results = "";
-
-        if (strlen($sfl_dirlocation) == 0 && strlen($sfl_userlocation) == 0) {
-
-            $results .= JText::_('NO_DIR_GIVEN');
-        } else {
-
-            echo "<script>window.sfl_dirlocation= '".$sfl_dirlocation."';</script>";
-            $results .= ModSimpleFileListerHelperv10::getDirContents($params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation);
-        }
+        echo "<script>
+            window.sfl_dirlocation= '".$sfl_dirlocation."';
+            window.paginationPointer = [];
+        </script>";
+        $results = ModSimpleFileListerHelperv10::getDirContents($params, $sfl_dirlocation, $sfl_basepath, $sfl_maxfiles, $sfl_userlocation);
 
         return $results;
     }
@@ -44,7 +38,7 @@ class ModSimpleFileListerHelperv10 {
                 $step++;
             }
 
-                return round($filesize,2).' '.$prefix[$step];
+            return round($filesize,2).' '.$prefix[$step];
 
         } else {
 
@@ -91,6 +85,7 @@ class ModSimpleFileListerHelperv10 {
         $tds = "";
         $rows = [];
 
+
         // Don't allow moving upwards in dirs through AJAX
         if ($sfl_allowupdir == 0 && strlen(strstr($sfl_dirlocation, "../")) > 0) $sfl_dirlocation = $sfl_dirlocationdefault;
 
@@ -116,8 +111,6 @@ class ModSimpleFileListerHelperv10 {
             $idx = 0;
             $dir_list = null;
             $file_list = null;
-            $idx_startat = $session->get( 'sfl_nextindex', 0);
-            $idx_endat = $session->get( 'sfl_stopindex', $sfl_maxfiles);
 
             while (false !== ($lfile = readdir($bib))) {
 
@@ -147,56 +140,28 @@ class ModSimpleFileListerHelperv10 {
 
                 foreach ($full_list as $lfile) {
 
-                    $fdir = (substr($lfile['name'], 0, 5) === "*dir*");
 
                     if($lfile['name'] != "." && $lfile['name'] != ".." && !preg_match("/^\..+/", $lfile['name']) && $lfile['name'] != "index.html") {
 
                         // Capture a list of files to be put in session var. This to protect delete
                         $filelist .= $lfile['name'].'*';
 
-                        if ($idx >= $idx_endat) {
-
-                            $session->set( 'sfl_nextindex', $idx);
-                            $session->set( 'sfl_stopindex', $idx + $sfl_maxfiles);
-                            break;
-                        }
-
-                        $idx += 1;
-
-                        $row['href'] = $sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name'].'">'.$lfile['name'];
+                        $row['href'] = $sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name'];
                         $row['filename'] = $lfile['name'];
                         $row['date'] = date ("M j, Y g:i A", filemtime($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name']));
                         $row['size'] = ModSimpleFileListerHelperv10::getFileSizePP(filesize($sfl_dirlocation.DIRECTORY_SEPARATOR.$lfile['name']));
                         
                         $rows[] = $row;
-
-                        $tds .=  
-                        '<tr>
-                                <td class="sfl_item">
-                                    <nobr><a href="'.$row['href'].'">'.$row['name'].'</a></nobr>
-                                </td>
-                                <td class="sfl_item text-right"><nobr>'.$row['date'].'</nobr></td>
-                                <td class="sfl_item text-right"><nobr>'.$row['size'].'</nobr></td>
-                                <td class="action-btn">
-                                    <nobr>
-                                        <a class="sfl_btnDelete" href="#" onclick=deleteFile("'.$row['name'].'")>
-                                            <img class="sfldel" src="/modules/mod_simplefilelisterv1.0/images/delete.png">
-                                        </a>
-                                    </nobr>
-                                </td>
-                        </tr>';
-
-
-                        }
                     }
                 }
-
-                $session->set( 'sfl_filelist', $filelist);
             }
 
-            closedir($bib);
+            $session->set( 'sfl_filelist', $filelist);
+        }
 
-        return json_encode($rows);
+        closedir($bib);
+ 
+        return $rows;
     }
 
     function getBaseURL($sfl_dirlocation, $sfl_basepath) {
